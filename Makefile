@@ -1,20 +1,19 @@
-SRC_DIR = src
-OBJ_DIR = objs
-BIN_DIR = bin
+SRC_DIR      = src
+OBJ_DIR      = objs
+BIN_DIR      = bin
+TEST_DIR     = tests
 
-CXX	  = g++
-CXXFLAGS = -Wall -Wextra -Werror -std=c++17 -Wno-deprecated-declarations -I$(SRC_DIR) -MMD -MP -g3
+CXX	      = g++
+CXXFLAGS  = -Wall -Wextra -Werror -std=c++17 -Wno-deprecated-declarations -I$(SRC_DIR) -MMD -MP -g3
 
-SERVER_BIN = $(BIN_DIR)/server
+SERVER_BIN  = $(BIN_DIR)/server
 CLIENT_BIN	= $(BIN_DIR)/client
 
 SERVER_SRCS = $(SRC_DIR)/server/main.cpp
-
 SERVER_OBJS = $(SERVER_SRCS:$(SRC_DIR)/%.cpp=$(OBJ_DIR)/%.o)
 
 CLIENT_SRCS = $(SRC_DIR)/client/main.cpp
-
-CLIENT_OBJS = $(CLI_SRCS:$(SRC_DIR)/%.cpp=$(OBJ_DIR)/%.o)
+CLIENT_OBJS = $(CLIENT_SRCS:$(SRC_DIR)/%.cpp=$(OBJ_DIR)/%.o)
 
 OBJS = $(SERVER_OBJS) $(CLIENT_OBJS)
 DEPS = $(OBJS:.o=.d)
@@ -42,11 +41,16 @@ $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp
 -include $(DEPS)
 
 clean:
-	rm -rf $(OBJ_DIR)
+	@$(MAKE) -C $(TEST_DIR) clean
+	rm -rf $(OBJ_DIR) $(TEST_OBJ_DIR)
 
 fclean: clean
+	@$(MAKE) -C $(TEST_DIR) fclean
 	rm -rf $(BIN_DIR)
 
 re: fclean all
 
-.PHONY: all clean fclean re run-server run-client
+test:
+	@$(MAKE) -C $(TEST_DIR) test
+
+.PHONY: all clean fclean re run-server run-client test
