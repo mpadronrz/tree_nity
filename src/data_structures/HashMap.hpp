@@ -16,7 +16,8 @@ class	HashMap {
 			  max_load_factor_(max_load_factor > 0.0f ? max_load_factor : 0.75f) {}
 
 		HashMap(std::initializer_list<ValueType> init_list, float max_load_factor = 0.75f)
-			: HashMap(calculate_initial_capacity(init_list.size(), max_load_factor), max_load_factor) {
+			: HashMap(calculate_initial_capacity(init_list.size(),
+			  max_load_factor), max_load_factor) {
 				insert(init_list);
 			}
 
@@ -125,7 +126,7 @@ class	HashMap {
 		 */
 		void	insert(std::initializer_list<ValueType> list) {
 			reserve(num_elements_ + list.size());
-			for (const auto& entry: list) {
+			for (const auto& entry : list) {
 				insert(entry.first, entry.second);
 			}
 		}
@@ -233,7 +234,7 @@ class	HashMap {
 		 */
 		Value&	at(const Key& key) {
 			size_t	idx = get_index(key);
-			for (auto& entry: buckets_[idx]) {
+			for (auto& entry : buckets_[idx]) {
 				if (entry.first == key) {
 					return entry.second;
 				}
@@ -250,7 +251,7 @@ class	HashMap {
 		 */
 		const Value& at(const Key& key) const {
 			size_t	idx = get_index(key);
-			for (const auto& entry: buckets_[idx]) {
+			for (const auto& entry : buckets_[idx]) {
 				if (entry.first == key) {
 					return entry.second;
 				}
@@ -438,7 +439,7 @@ class	HashMap {
 		void	rehash(size_t	new_capacity) {
 			BucketVector	new_buckets(new_capacity);
 
-			for (auto& old_bucket: buckets_) {
+			for (auto& old_bucket : buckets_) {
 				for (auto& entry : old_bucket) {
 					size_t	new_idx = hasher_(entry.first) % new_capacity;
 					new_buckets[new_idx].push_back(std::move(entry));
