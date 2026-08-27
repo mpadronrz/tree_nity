@@ -1,19 +1,24 @@
 SRC_DIR      = src
+CLIENT_DIR   = client
+CLIENT_INC_DIR = $(CLIENT_DIR)/inc
 OBJ_DIR      = objs
 BIN_DIR      = bin
 TEST_DIR     = tests
 
 CXX	      = g++
-CXXFLAGS  = -Wall -Wextra -Werror -std=c++17 -Wno-deprecated-declarations -I$(SRC_DIR) -MMD -MP -g3
+CXXFLAGS  = -Wall -Wextra -Werror -std=c++17 -Wno-deprecated-declarations -I$(SRC_DIR) -I$(CLIENT_INC_DIR) -MMD -MP -g3
 
 SERVER_BIN  = $(BIN_DIR)/server
 CLIENT_BIN	= $(BIN_DIR)/client
 
 SERVER_SRCS = $(SRC_DIR)/server/main.cpp
-SERVER_OBJS = $(SERVER_SRCS:$(SRC_DIR)/%.cpp=$(OBJ_DIR)/%.o)
+SERVER_OBJS = $(SERVER_SRCS:%.cpp=$(OBJ_DIR)/%.o)
 
-CLIENT_SRCS = $(SRC_DIR)/client/main.cpp
-CLIENT_OBJS = $(CLIENT_SRCS:$(SRC_DIR)/%.cpp=$(OBJ_DIR)/%.o)
+CLIENT_SRCS = $(CLIENT_DIR)/src/main.cpp $(CLIENT_DIR)/src/command.cpp \
+	$(CLIENT_DIR)/src/message_parser.cpp $(CLIENT_DIR)/src/message_output.cpp \
+	$(CLIENT_DIR)/src/exit_status.cpp $(CLIENT_DIR)/src/fifo_io.cpp \
+	$(CLIENT_DIR)/src/shutdown_signal.cpp
+CLIENT_OBJS = $(CLIENT_SRCS:%.cpp=$(OBJ_DIR)/%.o)
 
 OBJS = $(SERVER_OBJS) $(CLIENT_OBJS)
 DEPS = $(OBJS:.o=.d)
@@ -34,7 +39,7 @@ $(CLIENT_BIN): $(CLIENT_OBJS)
 	@mkdir -p $(BIN_DIR)
 	$(CXX) $(CXXFLAGS) $(CLIENT_OBJS) -o $(CLIENT_BIN)
 
-$(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp
+$(OBJ_DIR)/%.o: %.cpp
 	@mkdir -p $(dir $@)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
