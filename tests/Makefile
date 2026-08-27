@@ -10,7 +10,7 @@ TEST_INCS = -I$(GTEST_DIR)/include -I$(GTEST_DIR)
 
 TEST_BIN    = tests
 
-TEST_SRCS   = test_main.cpp
+TEST_SRCS   = test_main.cpp test_hashmap.cpp
 TEST_OBJS   = $(TEST_SRCS:%.cpp=$(TEST_OBJ_DIR)/%.o)
 
 GTEST_OBJS     := $(TEST_OBJ_DIR)/gtest-all.o
