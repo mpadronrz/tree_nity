@@ -30,7 +30,7 @@ class	HashMap {
 			  max_load_factor_(other.max_load_factor_),
 			  hasher_(std::move(other.hasher_)) {
 				other.num_elements_ = 0;
-				other.buckets_.assign(1, {});
+				other.buckets_.resize(1);
 			  }
 		HashMap& operator=(HashMap&& other) noexcept {
 			if (this != &other) {
@@ -39,7 +39,7 @@ class	HashMap {
 				hasher_ = std::move(other.hasher_);
 
 				other.num_elements_ = 0;
-				other.buckets_.assign(1, {});
+				other.buckets_.resize(1);
 			}
 			return *this;
 		}
