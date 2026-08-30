@@ -10,12 +10,12 @@ TEST_INCS = -I$(GTEST_DIR)/include -I$(GTEST_DIR)
 
 TEST_BIN    = tests
 
-TEST_SRCS   = test_main.cpp test_hashmap.cpp test_prefixtree.cpp
+TEST_SRCS   = test_main.cpp test_hashmap.cpp test_prefixtree.cpp test_protocol.cpp
 TEST_OBJS   = $(TEST_SRCS:%.cpp=$(TEST_OBJ_DIR)/%.o)
 
 GTEST_OBJS     := $(TEST_OBJ_DIR)/gtest-all.o
 
-TESTED_SRCS = $(SRC_DIR)/data_structures/PrefixTree.cpp
+TESTED_SRCS = $(SRC_DIR)/data_structures/PrefixTree.cpp $(SRC_DIR)/protocol/Protocol.cpp
 TESTED_OBJS = $(TESTED_SRCS:$(SRC_DIR)/%.cpp=$(OBJ_DIR)/%.o)
 
 OBJS = $(TEST_OBJS) $(TESTED_OBJS)
