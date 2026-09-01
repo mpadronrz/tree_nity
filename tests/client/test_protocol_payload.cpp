@@ -67,4 +67,25 @@ TEST(ClientProtocolPayload, RejectsTruncatedSecondString) {
     EXPECT_FALSE(client::decode_two_string_payload(payload, key, value));
 }
 
+// SubscriberConnect conserva las tres cadenas y los campos binarios de offset al final del payload.
+TEST(ClientProtocolPayload, EncodesSubscriberOptions) {
+    std::vector<unsigned char> payload;
+
+    ASSERT_TRUE(client::encode_subscriber_payload("events", "client0", "user", true, 42U, payload));
+    ASSERT_EQ(payload.size(), 4U + 6U + 4U + 7U + 4U + 4U + 1U + 4U);
+    EXPECT_EQ(payload[payload.size() - 5U], 1U);
+    EXPECT_EQ(payload[payload.size() - 4U], 42U);
+}
+
+// Commit y desconexión tienen payloads independientes para no mezclar su estado con el de los mensajes.
+TEST(ClientProtocolPayload, EncodesCommitAndDisconnect) {
+    std::vector<unsigned char> commit;
+    std::vector<unsigned char> disconnect;
+
+    ASSERT_TRUE(client::encode_commit_payload("client0", 8U, commit));
+    ASSERT_TRUE(client::encode_disconnect_payload("client0", disconnect));
+    EXPECT_EQ(commit.size(), 4U + 7U + 4U);
+    EXPECT_EQ(disconnect.size(), 4U + 7U);
+}
+
 } // namespace

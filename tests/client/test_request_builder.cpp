@@ -73,4 +73,22 @@ TEST(ClientRequestBuilder, BuildsPublishRequestWithKeyAndValue) {
     EXPECT_EQ(value, "body");
 }
 
+// El request de suscripción incluye topic, identidad, prefijo y offset solicitado.
+TEST(ClientRequestBuilder, BuildsSubscriberCommitAndDisconnectRequests) {
+    std::vector<unsigned char> subscribe;
+    std::vector<unsigned char> commit;
+    std::vector<unsigned char> disconnect;
+    client::RequestHeader header = {};
+
+    ASSERT_TRUE(client::build_subscriber_request(7U, "events", "client0", "user", true, 3U, subscribe));
+    ASSERT_TRUE(client::decode_request_header(subscribe.data(), client::kRequestHeaderSize, header));
+    EXPECT_EQ(header.action, static_cast<std::uint8_t>(client::RequestAction::SubscriberConnect));
+    ASSERT_TRUE(client::build_commit_request(7U, "client0", 4U, commit));
+    ASSERT_TRUE(client::build_disconnect_request(7U, "client0", disconnect));
+    ASSERT_TRUE(client::decode_request_header(commit.data(), client::kRequestHeaderSize, header));
+    EXPECT_EQ(header.action, static_cast<std::uint8_t>(client::RequestAction::SubscriberCommit));
+    ASSERT_TRUE(client::decode_request_header(disconnect.data(), client::kRequestHeaderSize, header));
+    EXPECT_EQ(header.action, static_cast<std::uint8_t>(client::RequestAction::Disconnect));
+}
+
 } // namespace

@@ -31,6 +31,19 @@ bool build_single_string_request(RequestAction action, std::uint32_t client_pid,
 bool build_two_string_request(RequestAction action, std::uint32_t client_pid,
     const std::string& first, const std::string& second, std::vector<unsigned char>& frame);
 
+// Construye el request completo para registrar un consumidor y sus opciones de lectura.
+bool build_subscriber_request(std::uint32_t client_pid, const std::string& topic,
+    const std::string& subscriber, const std::string& prefix, bool has_offset,
+    std::uint32_t offset, std::vector<unsigned char>& frame);
+
+// Construye el request de ACK/commit con el siguiente offset del consumidor.
+bool build_commit_request(std::uint32_t client_pid, const std::string& subscriber,
+    std::uint32_t offset, std::vector<unsigned char>& frame);
+
+// Construye el request de desconexión ordenada del consumidor.
+bool build_disconnect_request(std::uint32_t client_pid, const std::string& subscriber,
+    std::vector<unsigned char>& frame);
+
 } // namespace client
 
 #endif

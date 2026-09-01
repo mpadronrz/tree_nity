@@ -2,6 +2,7 @@
 #include "management_command.hpp"
 #include "producer_command.hpp"
 #include "shutdown_signal.hpp"
+#include "subscriber_command.hpp"
 
 #include <iostream>
 
@@ -27,7 +28,5 @@ int main(int argc, char *argv[]) {
     if (result.command.type == client::CommandType::Produce)
         return client::execute_producer_command(result.command, std::cin, std::cerr);
 
-    // Subscribe se conectará cuando estén listos su FIFO dedicado y su bucle de escucha.
-    std::cerr << "command not implemented yet" << '\n';
-    return 1;
+    return client::execute_subscriber_command(result.command, std::cout, std::cerr);
 }

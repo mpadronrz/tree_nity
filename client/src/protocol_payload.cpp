@@ -97,6 +97,44 @@ bool decode_two_string_payload(const std::vector<unsigned char>& payload, std::s
     return position == payload.size();
 }
 
+bool encode_subscriber_payload(const std::string& topic, const std::string& subscriber,
+    const std::string& prefix, bool has_offset, std::uint32_t offset,
+    std::vector<unsigned char>& payload) {
+    const std::size_t maximum_size = static_cast<std::size_t>(std::numeric_limits<std::uint32_t>::max());
+    if (topic.size() > maximum_size || subscriber.size() > maximum_size || prefix.size() > maximum_size)
+        return false;
+    if (prefix.size() > maximum_size - 13U)
+        return false;
+    if (subscriber.size() > maximum_size - prefix.size() - 13U)
+        return false;
+    if (topic.size() > maximum_size - subscriber.size() - prefix.size() - 13U)
+        return false;
+
+    payload.clear();
+    payload.reserve(13U + topic.size() + subscriber.size() + prefix.size());
+    append_string(payload, topic);
+    append_string(payload, subscriber);
+    append_string(payload, prefix);
+    payload.push_back(has_offset ? 1U : 0U);
+    append_little_endian_uint32(payload, offset);
+    return true;
+}
+
+bool encode_commit_payload(const std::string& subscriber, std::uint32_t offset,
+    std::vector<unsigned char>& payload) {
+    if (subscriber.size() > static_cast<std::size_t>(std::numeric_limits<std::uint32_t>::max()))
+        return false;
+    payload.clear();
+    payload.reserve(8U + subscriber.size());
+    append_string(payload, subscriber);
+    append_little_endian_uint32(payload, offset);
+    return true;
+}
+
+bool encode_disconnect_payload(const std::string& subscriber, std::vector<unsigned char>& payload) {
+    return encode_single_string_payload(subscriber, payload);
+}
+
 bool decode_single_string_payload(const std::vector<unsigned char>& payload, std::string& value) {
     if (payload.size() < 4U)
         return false;
