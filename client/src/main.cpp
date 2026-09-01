@@ -1,4 +1,5 @@
 #include "command.hpp"
+#include "management_command.hpp"
 #include "shutdown_signal.hpp"
 
 #include <iostream>
@@ -18,6 +19,12 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    // La comunicación por FIFO se conectará en el siguiente punto del desarrollo.
-    return 0;
+    // Las operaciones de gestión ya comparten el ciclo completo de request y response por FIFO.
+    if (result.command.type == client::CommandType::Create || result.command.type == client::CommandType::List
+        || result.command.type == client::CommandType::Info)
+        return client::execute_management_command(result.command, std::cout, std::cerr);
+
+    // Produce y subscribe se conectarán cuando estén listos sus payloads y bucles específicos.
+    std::cerr << "command not implemented yet" << '\n';
+    return 1;
 }
