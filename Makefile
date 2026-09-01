@@ -17,7 +17,7 @@ SERVER_OBJS = $(SERVER_SRCS:%.cpp=$(OBJ_DIR)/%.o)
 CLIENT_SRCS = $(CLIENT_DIR)/src/main.cpp $(CLIENT_DIR)/src/command.cpp \
 	$(CLIENT_DIR)/src/message_parser.cpp $(CLIENT_DIR)/src/message_output.cpp \
 	$(CLIENT_DIR)/src/exit_status.cpp $(CLIENT_DIR)/src/fifo_io.cpp \
-	$(CLIENT_DIR)/src/shutdown_signal.cpp
+	$(CLIENT_DIR)/src/shutdown_signal.cpp $(CLIENT_DIR)/src/protocol_frame.cpp
 CLIENT_OBJS = $(CLIENT_SRCS:%.cpp=$(OBJ_DIR)/%.o)
 
 OBJS = $(SERVER_OBJS) $(CLIENT_OBJS)
