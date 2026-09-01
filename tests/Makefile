@@ -18,7 +18,7 @@ TEST_SRCS   = test_main.cpp test_hashmap.cpp test_prefixtree.cpp test_protocol.c
 	client/test_shutdown_signal.cpp client/test_protocol_frame.cpp \
 	client/test_protocol_payload.cpp client/test_request_builder.cpp \
 	client/test_protocol_io.cpp client/test_ipc_exchange.cpp \
-	client/test_management_command.cpp
+	client/test_management_command.cpp client/test_producer_command.cpp
 
 TEST_OBJS   = $(TEST_SRCS:%.cpp=$(TEST_OBJ_DIR)/%.o)
 
@@ -29,7 +29,8 @@ TESTED_SRCS = $(SRC_DIR)/data_structures/PrefixTree.cpp $(SRC_DIR)/protocol/Prot
 	$(CLIENT_DIR)/src/fifo_io.cpp $(CLIENT_DIR)/src/shutdown_signal.cpp \
 	$(CLIENT_DIR)/src/protocol_frame.cpp $(CLIENT_DIR)/src/protocol_payload.cpp \
 	$(CLIENT_DIR)/src/request_builder.cpp $(CLIENT_DIR)/src/protocol_io.cpp \
-	$(CLIENT_DIR)/src/ipc_exchange.cpp $(CLIENT_DIR)/src/management_command.cpp
+	$(CLIENT_DIR)/src/ipc_exchange.cpp $(CLIENT_DIR)/src/management_command.cpp \
+	$(CLIENT_DIR)/src/producer_command.cpp
 TESTED_OBJS = $(TESTED_SRCS:$(SRC_DIR)/%.cpp=$(OBJ_DIR)/%.o)
 
 

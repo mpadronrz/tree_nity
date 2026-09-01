@@ -34,4 +34,16 @@ int exit_code_for(ClientError first, ClientError second) {
     return code_for(first);
 }
 
+int exit_code_from_response_code(std::uint8_t response_code) {
+    if (response_code == 0U)
+        return 0;
+    if (response_code == 1U)
+        return 1;
+    if (response_code == 2U)
+        return 2;
+    if (response_code == 3U)
+        return 3;
+    return 3;
+}
+
 } // namespace client

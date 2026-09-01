@@ -19,4 +19,12 @@ bool build_single_string_request(RequestAction action, std::uint32_t client_pid,
     return build_request_frame(static_cast<std::uint8_t>(action), client_pid, payload, frame);
 }
 
+bool build_two_string_request(RequestAction action, std::uint32_t client_pid,
+    const std::string& first, const std::string& second, std::vector<unsigned char>& frame) {
+    std::vector<unsigned char> payload;
+    if (!encode_two_string_payload(first, second, payload))
+        return false;
+    return build_request_frame(static_cast<std::uint8_t>(action), client_pid, payload, frame);
+}
+
 } // namespace client

@@ -55,4 +55,22 @@ TEST(ClientRequestBuilder, BuildsInfoRequestWithSubscriberPayload) {
     EXPECT_EQ(subscriber, "client0");
 }
 
+// Publish transporta key y value como dos cadenas consecutivas dentro de un mismo payload.
+TEST(ClientRequestBuilder, BuildsPublishRequestWithKeyAndValue) {
+    std::vector<unsigned char> frame;
+    std::vector<unsigned char> payload;
+    client::RequestHeader header = {};
+    std::string key;
+    std::string value;
+
+    ASSERT_TRUE(client::build_two_string_request(client::RequestAction::Publish,
+        7U, "user.create", "body", frame));
+    ASSERT_TRUE(client::decode_request_header(frame.data(), client::kRequestHeaderSize, header));
+    EXPECT_EQ(header.action, static_cast<std::uint8_t>(client::RequestAction::Publish));
+    payload.assign(frame.begin() + static_cast<std::vector<unsigned char>::difference_type>(client::kRequestHeaderSize), frame.end());
+    ASSERT_TRUE(client::decode_two_string_payload(payload, key, value));
+    EXPECT_EQ(key, "user.create");
+    EXPECT_EQ(value, "body");
+}
+
 } // namespace

@@ -1,5 +1,6 @@
 #include "management_command.hpp"
 
+#include "exit_status.hpp"
 #include "ipc_exchange.hpp"
 #include "request_builder.hpp"
 
@@ -39,18 +40,6 @@ bool build_management_request(const Command& command, std::uint32_t client_pid,
 
 } // namespace
 
-int exit_code_for_response(std::uint8_t response_code) {
-    if (response_code == 0U)
-        return 0;
-    if (response_code == 1U)
-        return 1;
-    if (response_code == 2U)
-        return 2;
-    if (response_code == 3U)
-        return 3;
-    return 3;
-}
-
 int execute_management_command(const Command& command, std::ostream& output, std::ostream& error_output) {
     const std::uint32_t client_pid = static_cast<std::uint32_t>(getpid());
     std::vector<unsigned char> request;
@@ -73,7 +62,7 @@ int execute_management_command(const Command& command, std::ostream& output, std
         return 3;
     }
 
-    const int exit_code = exit_code_for_response(exchange.response.code);
+    const int exit_code = exit_code_from_response_code(exchange.response.code);
     if (exit_code != 0) {
         write_server_error(error_output, exchange.response.payload);
         return exit_code;

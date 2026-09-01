@@ -27,6 +27,10 @@ bool build_empty_request(RequestAction action, std::uint32_t client_pid,
 bool build_single_string_request(RequestAction action, std::uint32_t client_pid,
     const std::string& value, std::vector<unsigned char>& frame);
 
+// Construye un request con dos campos de cadena, usado por Publish para key y value.
+bool build_two_string_request(RequestAction action, std::uint32_t client_pid,
+    const std::string& first, const std::string& second, std::vector<unsigned char>& frame);
+
 } // namespace client
 
 #endif

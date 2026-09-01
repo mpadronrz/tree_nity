@@ -1,5 +1,6 @@
 #include "command.hpp"
 #include "management_command.hpp"
+#include "producer_command.hpp"
 #include "shutdown_signal.hpp"
 
 #include <iostream>
@@ -23,8 +24,10 @@ int main(int argc, char *argv[]) {
     if (result.command.type == client::CommandType::Create || result.command.type == client::CommandType::List
         || result.command.type == client::CommandType::Info)
         return client::execute_management_command(result.command, std::cout, std::cerr);
+    if (result.command.type == client::CommandType::Produce)
+        return client::execute_producer_command(result.command, std::cin, std::cerr);
 
-    // Produce y subscribe se conectarán cuando estén listos sus payloads y bucles específicos.
+    // Subscribe se conectará cuando estén listos su FIFO dedicado y su bucle de escucha.
     std::cerr << "command not implemented yet" << '\n';
     return 1;
 }

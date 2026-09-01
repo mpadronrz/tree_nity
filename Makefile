@@ -20,7 +20,7 @@ CLIENT_SRCS = $(CLIENT_DIR)/src/main.cpp $(CLIENT_DIR)/src/command.cpp \
 	$(CLIENT_DIR)/src/shutdown_signal.cpp $(CLIENT_DIR)/src/protocol_frame.cpp \
 	$(CLIENT_DIR)/src/protocol_payload.cpp $(CLIENT_DIR)/src/request_builder.cpp \
 	$(CLIENT_DIR)/src/protocol_io.cpp $(CLIENT_DIR)/src/ipc_exchange.cpp \
-	$(CLIENT_DIR)/src/management_command.cpp
+	$(CLIENT_DIR)/src/management_command.cpp $(CLIENT_DIR)/src/producer_command.cpp
 CLIENT_OBJS = $(CLIENT_SRCS:%.cpp=$(OBJ_DIR)/%.o)
 
 OBJS = $(SERVER_OBJS) $(CLIENT_OBJS)
