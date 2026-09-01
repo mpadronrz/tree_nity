@@ -54,7 +54,7 @@ IpcExchangeResult exchange_request(const std::string& server_fifo, std::uint32_t
     }
 
     // O_NONBLOCK evita que un identificador inexistente deje bloqueado al cliente al abrir el FIFO principal.
-    const int server_descriptor = open(server_fifo.c_str(), O_WRONLY | O_NONBLOCK);
+    const int server_descriptor = open(server_fifo.c_str(), O_WRONLY);
     if (server_descriptor == -1) {
         const int error_number = errno;
         close_if_open(response_descriptor);
