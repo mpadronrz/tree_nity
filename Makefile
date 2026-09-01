@@ -1,17 +1,21 @@
 SRC_DIR      = src
-CLIENT_DIR   = client
+CLIENT_DIR   = $(SRC_DIR)/client
 CLIENT_INC_DIR = $(CLIENT_DIR)/inc
+SERVER_DIR   = $(SRC_DIR)/server
+SERVER_INC_DIR = $(SERVER_DIR)/inc
 OBJ_DIR      = objs
 BIN_DIR      = bin
 TEST_DIR     = tests
 
 CXX	      = g++
-CXXFLAGS  = -Wall -Wextra -Werror -std=c++17 -Wno-deprecated-declarations -I$(SRC_DIR) -I$(CLIENT_INC_DIR) -MMD -MP -g3
+CXXFLAGS  = -Wall -Wextra -Werror -std=c++17 -Wno-deprecated-declarations -I$(SRC_DIR) -I$(SERVER_INC_DIR) -I$(CLIENT_INC_DIR) -MMD -MP -g3
 
 SERVER_BIN  = $(BIN_DIR)/server
 CLIENT_BIN	= $(BIN_DIR)/client
 
-SERVER_SRCS = $(SRC_DIR)/server/main.cpp
+SERVER_SRCS = $(SRC_DIR)/main.cpp $(SERVER_DIR)/src/Server.cpp \
+	$(SERVER_DIR)/src/Topic.cpp $(SRC_DIR)/protocol/Protocol.cpp \
+	$(SRC_DIR)/data_structures/PrefixTree.cpp
 SERVER_OBJS = $(SERVER_SRCS:%.cpp=$(OBJ_DIR)/%.o)
 
 CLIENT_SRCS = $(CLIENT_DIR)/src/main.cpp $(CLIENT_DIR)/src/command.cpp \
@@ -28,12 +32,14 @@ OBJS = $(SERVER_OBJS) $(CLIENT_OBJS)
 DEPS = $(OBJS:.o=.d)
 
 all: $(SERVER_BIN) $(CLIENT_BIN)
+	@ln -sf $(SERVER_BIN) server
+	@ln -sf $(CLIENT_BIN) client
 
 run-server: $(SERVER_BIN)
-	./$(SERVER_BIN)
+	./server
 
 run-client: $(CLIENT_BIN)
-	./$(CLIENT_BIN)
+	./client
 
 $(SERVER_BIN): $(SERVER_OBJS)
 	@mkdir -p $(BIN_DIR)
@@ -55,7 +61,7 @@ clean:
 
 fclean: clean
 	@$(MAKE) -C $(TEST_DIR) fclean
-	rm -rf $(BIN_DIR)
+	rm -rf $(BIN_DIR) server client
 
 re: fclean all
 
