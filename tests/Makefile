@@ -1,5 +1,5 @@
 SRC_DIR      = ../src
-CLIENT_DIR   = ../client
+CLIENT_DIR   = ../src/client
 CLIENT_INC_DIR = $(CLIENT_DIR)/inc
 OBJ_DIR      = ../objs
 TEST_OBJ_DIR = objs_tests
@@ -25,14 +25,14 @@ TEST_OBJS   = $(TEST_SRCS:%.cpp=$(TEST_OBJ_DIR)/%.o)
 
 GTEST_OBJS     := $(TEST_OBJ_DIR)/gtest-all.o
 
-TESTED_SRCS = $(SRC_DIR)/data_structures/PrefixTree.cpp $(SRC_DIR)/protocol/Protocol.cpp $(CLIENT_DIR)/src/command.cpp $(CLIENT_DIR)/src/message_parser.cpp \
-	$(CLIENT_DIR)/src/message_output.cpp $(CLIENT_DIR)/src/exit_status.cpp \
-	$(CLIENT_DIR)/src/fifo_io.cpp $(CLIENT_DIR)/src/shutdown_signal.cpp \
-	$(CLIENT_DIR)/src/protocol_frame.cpp $(CLIENT_DIR)/src/protocol_payload.cpp \
-	$(CLIENT_DIR)/src/request_builder.cpp $(CLIENT_DIR)/src/protocol_io.cpp \
-	$(CLIENT_DIR)/src/ipc_exchange.cpp $(CLIENT_DIR)/src/management_command.cpp \
-	$(CLIENT_DIR)/src/producer_command.cpp $(CLIENT_DIR)/src/subscription_io.cpp \
-	$(CLIENT_DIR)/src/subscriber_command.cpp
+TESTED_SRCS = $(SRC_DIR)/client/src/command.cpp $(SRC_DIR)/client/src/message_parser.cpp \
+	$(SRC_DIR)/client/src/message_output.cpp $(SRC_DIR)/client/src/exit_status.cpp \
+	$(SRC_DIR)/client/src/fifo_io.cpp $(SRC_DIR)/client/src/shutdown_signal.cpp \
+	$(SRC_DIR)/client/src/protocol_frame.cpp $(SRC_DIR)/client/src/protocol_payload.cpp \
+	$(SRC_DIR)/client/src/request_builder.cpp $(SRC_DIR)/client/src/protocol_io.cpp \
+	$(SRC_DIR)/client/src/ipc_exchange.cpp $(SRC_DIR)/client/src/management_command.cpp \
+	$(SRC_DIR)/client/src/producer_command.cpp $(SRC_DIR)/client/src/subscription_io.cpp \
+	$(SRC_DIR)/client/src/subscriber_command.cpp
 TESTED_OBJS = $(TESTED_SRCS:$(SRC_DIR)/%.cpp=$(OBJ_DIR)/%.o)
 
 
@@ -55,7 +55,7 @@ $(TEST_OBJ_DIR)/gtest-all.o: $(GTEST_DIR)/src/gtest-all.cc
 	@mkdir -p $(dir $@)
 	$(CXX) -std=c++17 $(TEST_LIBS) $(TEST_INCS) -w -c $< -o $@
 
-$(OBJ_DIR)/client/src/%.o: $(CLIENT_DIR)/src/%.cpp
+$(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp
 	@mkdir -p $(dir $@)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
