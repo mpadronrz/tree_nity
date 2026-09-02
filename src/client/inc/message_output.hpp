@@ -1,14 +1,17 @@
 #ifndef CLIENT_MESSAGE_OUTPUT_HPP
 #define CLIENT_MESSAGE_OUTPUT_HPP
 
-#include "message_parser.hpp"
-
 #include <cstdint>
 #include <ostream>
 #include <string>
 #include <vector>
 
 namespace client {
+
+struct Message {
+    std::string key;
+    std::string value;
+};
 
 // Construye la línea key:body que debe mostrar un consumidor en el modo por defecto.
 std::string format_text_message(const Message& message);
