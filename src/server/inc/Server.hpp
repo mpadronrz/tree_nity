@@ -23,27 +23,29 @@ struct ClientMetadata
 class Server
 {
 	private:
+		// Used to guess if the server fifo was created
+		bool											correct_start;
+		int												fifo_fd;
+
 		std::string										ipc_path;
 
-		// Mapa de topics activos: la clave es el nombre (ej. "user_events")
+		// Active topics
 		HashMap<std::string, std::unique_ptr<Topic>>	topics;
 
-		// Índice de metadatos de clientes (HashMap propio obligatorio)
+		// Client metadata
 		HashMap<std::string, ClientMetadata>			client_index;
 
-		// Asocia el PID de un proceso productor con su topic conectado
+		// Assignes the producer pid to its connected topic.
 		HashMap<uint32_t, std::string>					producer_topics;
 
-		// Protege la creación/consulta de topics y metadatos de clientes
+		// For topic and metadata
 		std::mutex										server_mutex;
 
-		// Controla el bucle del servidor
+		// For the main loop
 		std::atomic<bool>								running{true};
 
-		// Envío de respuestas síncronas al FIFO del cliente (/tmp/treenity.client.CLIENT_PID)
 		void	send_response(uint32_t client_pid, Protocol::StatusCode status, std::string_view payload = "");
 
-		// Manejo de peticiones de protocolo binario (cabecera de 5 bytes)
 		void	handle_request(uint8_t action, const uint8_t* payload, size_t payload_len);
 		void	handle_create(const uint8_t* payload, size_t len);
 		void	handle_list(const uint8_t* payload, size_t len);
@@ -58,10 +60,11 @@ class Server
 		explicit	Server(const std::string& path);
 		~Server();
 
-		void	run();   // Bucle principal de eventos
-		void	stop();  // Para detener el bucle desde la señal
+		void	run();
+		void	stop();
 
-		// Métodos de gestión de topics
 		bool	create_topic(const std::string& topic_name);
 		Topic*	get_topic(const std::string& topic_name);
+
+		bool	is_correct_start() const noexcept;
 };

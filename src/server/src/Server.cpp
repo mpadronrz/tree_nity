@@ -25,10 +25,15 @@ Server::Server(const std::string& path):
 	running(true)
 {
 	unlink(ipc_path.c_str());
-	if (mkfifo(ipc_path.c_str(), 0666) == -1)
-	{
-		// Fallo al crear FIFO
+	if (mkfifo(ipc_path.c_str(), 0666) == -1) {
+		correct_start = false;
+		return;
 	}
+	else
+		correct_start = true;
+	fifo_fd = open(ipc_path.c_str(), O_RDWR);
+	if (fifo_fd == -1)
+		correct_start = false;
 }
 
 Server::~Server()
@@ -58,6 +63,7 @@ void Server::stop()
 		if (pair.second)
 			pair.second->shutdown();
 	}
+	close(fifo_fd);
 }
 
 void Server::send_response(uint32_t client_pid, Protocol::StatusCode status, std::string_view payload)
@@ -75,10 +81,6 @@ void Server::send_response(uint32_t client_pid, Protocol::StatusCode status, std
 
 void Server::run()
 {
-	int fifo_fd = open(ipc_path.c_str(), O_RDWR);
-	if (fifo_fd == -1)
-		return;
-
 	uint8_t buffer[1024];
 	std::vector<uint8_t> recv_buf;
 
@@ -389,4 +391,9 @@ Topic* Server::get_topic(const std::string& topic_name)
 		return found->get();
 
 	return nullptr;
+}
+
+bool	Server::is_correct_start() const noexcept
+{
+	return correct_start;
 }
