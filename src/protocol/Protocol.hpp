@@ -31,17 +31,20 @@ namespace Protocol {
 	};
 
 	struct	ManagementRequestHeader {
-		uint8_t	action;
+		CommandType	action;
 		uint32_t	payload_len;
 	};
 
-	struct	ManagmentResponseHeader {
-		uint8_t	status_code;
+	struct	ManagementResponseHeader {
+		StatusCode	status_code;
 		uint32_t	payload_len;
 	};
 
 	void	write_uint32_le(std::vector<uint8_t>& buf, uint32_t val);
 	[[nodiscard]] uint32_t read_uint32_le(const uint8_t* buf);
+
+	bool	parse_request_header(const uint8_t* buf, ManagementRequestHeader& out_header);
+	bool	parse_response_header(const uint8_t* buf, ManagementResponseHeader& out_header);
 
 	namespace Request {
 		[[nodiscard]] std::vector<uint8_t>	serialize_create(uint32_t pid, std::string_view topic);
