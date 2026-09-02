@@ -15,6 +15,24 @@ namespace Protocol {
 				(static_cast<uint32_t>(buf[3]) << 24);
 	}
 
+	bool parse_request_header(const uint8_t* buf, ManagementRequestHeader& out_header) {
+		if (buf[0] > 8 || buf[0] == 0) {
+			return false;
+		}
+		out_header.action =  static_cast<CommandType>(buf[0]);;
+		out_header.payload_len = read_uint32_le(buf + 1);
+		return true;
+	}
+
+	bool parse_response_header(const uint8_t* buf, ManagementResponseHeader& out_header) {
+		if (buf[0] > 3) {
+			return false;
+		}
+		out_header.status_code = static_cast<StatusCode>(buf[0]);
+		out_header.payload_len = read_uint32_le(buf + 1);
+		return true;
+	}
+
 	namespace Request {
 		std::vector<uint8_t>	serialize_create(uint32_t pid, std::string_view topic) {
 			uint32_t	payload_len = static_cast<uint32_t>(4 + topic.size());
