@@ -43,16 +43,16 @@ class Server
 		// Envío de respuestas síncronas al FIFO del cliente (/tmp/treenity.client.CLIENT_PID)
 		void	send_response(uint32_t client_pid, Protocol::StatusCode status, std::string_view payload = "");
 
-		// Manejo de peticiones de protocolo binario
-		void	handle_request(uint8_t action, uint32_t client_pid, const uint8_t* payload, size_t payload_len);
-		void	handle_create(uint32_t client_pid, const uint8_t* payload, size_t len);
-		void	handle_list(uint32_t client_pid, const uint8_t* payload, size_t len);
-		void	handle_info(uint32_t client_pid, const uint8_t* payload, size_t len);
-		void	handle_producer_connect(uint32_t client_pid, const uint8_t* payload, size_t len);
-		void	handle_publish(uint32_t client_pid, const uint8_t* payload, size_t len);
-		void	handle_subscriber_connect(uint32_t client_pid, const uint8_t* payload, size_t len);
-		void	handle_commit(uint32_t client_pid, const uint8_t* payload, size_t len);
-		void	handle_disconnect(uint32_t client_pid, const uint8_t* payload, size_t len);
+		// Manejo de peticiones de protocolo binario (cabecera de 5 bytes)
+		void	handle_request(uint8_t action, const uint8_t* payload, size_t payload_len);
+		void	handle_create(const uint8_t* payload, size_t len);
+		void	handle_list(const uint8_t* payload, size_t len);
+		void	handle_info(const uint8_t* payload, size_t len);
+		void	handle_producer_connect(const uint8_t* payload, size_t len);
+		void	handle_publish(const uint8_t* payload, size_t len);
+		void	handle_subscriber_connect(const uint8_t* payload, size_t len);
+		void	handle_commit(const uint8_t* payload, size_t len);
+		void	handle_disconnect(const uint8_t* payload, size_t len);
 
 	public:
 		explicit	Server(const std::string& path);

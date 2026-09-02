@@ -18,54 +18,6 @@ namespace {
 		}
 		return true;
 	}
-
-	bool decode_single_string(const uint8_t* payload, size_t len, std::string& out) {
-		if (len < 4) return false;
-		uint32_t str_len = Protocol::read_uint32_le(payload);
-		if (len - 4 != str_len) return false;
-		out.assign(reinterpret_cast<const char*>(payload + 4), str_len);
-		return true;
-	}
-
-	bool decode_string_at(const uint8_t* payload, size_t len, size_t& pos, std::string& out) {
-		if (len - pos < 4) return false;
-		uint32_t str_len = Protocol::read_uint32_le(payload + pos);
-		pos += 4;
-		if (len - pos < str_len) return false;
-		out.assign(reinterpret_cast<const char*>(payload + pos), str_len);
-		pos += str_len;
-		return true;
-	}
-
-	bool decode_two_strings(const uint8_t* payload, size_t len, std::string& out1, std::string& out2) {
-		size_t pos = 0;
-		if (!decode_string_at(payload, len, pos, out1)) return false;
-		if (!decode_string_at(payload, len, pos, out2)) return false;
-		return pos == len;
-	}
-
-	bool decode_subscriber_payload(const uint8_t* payload, size_t len,
-								   std::string& topic, std::string& subscriber,
-								   std::string& prefix, bool& has_offset, uint32_t& offset) {
-		size_t pos = 0;
-		if (!decode_string_at(payload, len, pos, topic)) return false;
-		if (!decode_string_at(payload, len, pos, subscriber)) return false;
-		if (!decode_string_at(payload, len, pos, prefix)) return false;
-		if (len - pos < 5) return false;
-		has_offset = (payload[pos] != 0);
-		pos += 1;
-		offset = Protocol::read_uint32_le(payload + pos);
-		pos += 4;
-		return pos == len;
-	}
-
-	bool decode_commit_payload(const uint8_t* payload, size_t len, std::string& subscriber, uint32_t& offset) {
-		size_t pos = 0;
-		if (!decode_string_at(payload, len, pos, subscriber)) return false;
-		if (len - pos != 4) return false;
-		offset = Protocol::read_uint32_le(payload + pos);
-		return true;
-	}
 }
 
 Server::Server(const std::string& path):
@@ -115,13 +67,7 @@ void Server::send_response(uint32_t client_pid, Protocol::StatusCode status, std
 	int fd = open(response_fifo.c_str(), O_WRONLY);
 	if (fd != -1)
 	{
-		uint32_t total_length = static_cast<uint32_t>(5 + payload.size());
-		std::vector<uint8_t> res;
-		res.reserve(total_length);
-		res.push_back(static_cast<uint8_t>(status));
-		Protocol::write_uint32_le(res, total_length);
-		res.insert(res.end(), payload.begin(), payload.end());
-
+		auto res = Protocol::Response::serialize_response(status, payload);
 		write(fd, res.data(), res.size());
 		close(fd);
 	}
@@ -144,28 +90,20 @@ void Server::run()
 		{
 			recv_buf.insert(recv_buf.end(), buffer, buffer + bytes_read);
 
-			// Cabecera de petición del cliente: 9 bytes (action: 1B, client_pid: 4B LE, total_length: 4B LE)
-			while (recv_buf.size() >= 9)
+			// Cabecera de petición del cliente: 5 bytes (action: 1B, payload_len: 4B LE)
+			while (recv_buf.size() >= 5)
 			{
 				uint8_t action = recv_buf[0];
-				uint32_t client_pid = Protocol::read_uint32_le(recv_buf.data() + 1);
-				uint32_t total_length = Protocol::read_uint32_le(recv_buf.data() + 5);
+				uint32_t payload_len = Protocol::read_uint32_le(recv_buf.data() + 1);
 
-				if (total_length < 9)
-				{
-					recv_buf.erase(recv_buf.begin());
-					continue;
-				}
-
-				if (recv_buf.size() < total_length)
+				if (recv_buf.size() < 5 + payload_len)
 					break; // Esperamos a que lleguen los bytes restantes de la trama
 
-				const uint8_t* payload = recv_buf.data() + 9;
-				size_t payload_len = total_length - 9;
+				const uint8_t* payload = recv_buf.data() + 5;
 
-				handle_request(action, client_pid, payload, payload_len);
+				handle_request(action, payload, payload_len);
 
-				recv_buf.erase(recv_buf.begin(), recv_buf.begin() + total_length);
+				recv_buf.erase(recv_buf.begin(), recv_buf.begin() + 5 + payload_len);
 			}
 		}
 		else if (bytes_read <= 0)
@@ -178,45 +116,45 @@ void Server::run()
 	close(fifo_fd);
 }
 
-void Server::handle_request(uint8_t action, uint32_t client_pid, const uint8_t* payload, size_t payload_len)
+void Server::handle_request(uint8_t action, const uint8_t* payload, size_t payload_len)
 {
 	switch (action)
 	{
 		case 1: // CreateTopic
-			handle_create(client_pid, payload, payload_len);
+			handle_create(payload, payload_len);
 			break;
 		case 2: // ListTopics
-			handle_list(client_pid, payload, payload_len);
+			handle_list(payload, payload_len);
 			break;
 		case 3: // ClientInfo
-			handle_info(client_pid, payload, payload_len);
+			handle_info(payload, payload_len);
 			break;
 		case 4: // ProducerConnect
-			handle_producer_connect(client_pid, payload, payload_len);
+			handle_producer_connect(payload, payload_len);
 			break;
 		case 5: // Publish
-			handle_publish(client_pid, payload, payload_len);
+			handle_publish(payload, payload_len);
 			break;
 		case 6: // SubscriberConnect
-			handle_subscriber_connect(client_pid, payload, payload_len);
+			handle_subscriber_connect(payload, payload_len);
 			break;
 		case 7: // SubscriberCommit
-			handle_commit(client_pid, payload, payload_len);
+			handle_commit(payload, payload_len);
 			break;
 		case 8: // Disconnect
-			handle_disconnect(client_pid, payload, payload_len);
+			handle_disconnect(payload, payload_len);
 			break;
 		default:
 			break;
 	}
 }
 
-void Server::handle_create(uint32_t client_pid, const uint8_t* payload, size_t len)
+void Server::handle_create(const uint8_t* payload, size_t len)
 {
+	uint32_t client_pid = 0;
 	std::string topic_name;
-	if (!decode_single_string(payload, len, topic_name))
+	if (!Protocol::Request::parse_create(payload, len, client_pid, topic_name))
 	{
-		send_response(client_pid, Protocol::StatusCode::GENERAL_ERROR);
 		return;
 	}
 
@@ -235,10 +173,13 @@ void Server::handle_create(uint32_t client_pid, const uint8_t* payload, size_t l
 	send_response(client_pid, Protocol::StatusCode::SUCCESS);
 }
 
-void Server::handle_list(uint32_t client_pid, const uint8_t* payload, size_t len)
+void Server::handle_list(const uint8_t* payload, size_t len)
 {
-	(void)payload;
-	(void)len;
+	uint32_t client_pid = 0;
+	if (!Protocol::Request::parse_list(payload, len, client_pid))
+	{
+		return;
+	}
 
 	std::lock_guard<std::mutex> lock(server_mutex);
 	std::string result;
@@ -255,12 +196,12 @@ void Server::handle_list(uint32_t client_pid, const uint8_t* payload, size_t len
 	send_response(client_pid, Protocol::StatusCode::SUCCESS, result);
 }
 
-void Server::handle_info(uint32_t client_pid, const uint8_t* payload, size_t len)
+void Server::handle_info(const uint8_t* payload, size_t len)
 {
+	uint32_t client_pid = 0;
 	std::string client_id;
-	if (!decode_single_string(payload, len, client_id))
+	if (!Protocol::Request::parse_info(payload, len, client_pid, client_id))
 	{
-		send_response(client_pid, Protocol::StatusCode::GENERAL_ERROR);
 		return;
 	}
 
@@ -281,12 +222,12 @@ void Server::handle_info(uint32_t client_pid, const uint8_t* payload, size_t len
 	send_response(client_pid, Protocol::StatusCode::SUCCESS, json);
 }
 
-void Server::handle_producer_connect(uint32_t client_pid, const uint8_t* payload, size_t len)
+void Server::handle_producer_connect(const uint8_t* payload, size_t len)
 {
+	uint32_t client_pid = 0;
 	std::string topic_name;
-	if (!decode_single_string(payload, len, topic_name))
+	if (!Protocol::Request::parse_connect(payload, len, client_pid, topic_name))
 	{
-		send_response(client_pid, Protocol::StatusCode::GENERAL_ERROR);
 		return;
 	}
 
@@ -305,43 +246,34 @@ void Server::handle_producer_connect(uint32_t client_pid, const uint8_t* payload
 	send_response(client_pid, Protocol::StatusCode::SUCCESS);
 }
 
-void Server::handle_publish(uint32_t client_pid, const uint8_t* payload, size_t len)
+void Server::handle_publish(const uint8_t* payload, size_t len)
 {
-	std::string key, value;
-	if (!decode_two_strings(payload, len, key, value))
+	std::string topic_name, key, value;
+	if (!Protocol::Request::parse_produce(payload, len, topic_name, key, value))
 	{
-		send_response(client_pid, Protocol::StatusCode::GENERAL_ERROR);
 		return;
 	}
 
-	std::string topic_name;
-	{
-		std::lock_guard<std::mutex> lock(server_mutex);
-		std::string* found_topic = producer_topics.find(client_pid);
-		if (found_topic != nullptr)
-			topic_name = *found_topic;
+	Topic* topic = nullptr;
+	if (!topic_name.empty()) {
+		topic = get_topic(topic_name);
 	}
-
-	Topic* topic = get_topic(topic_name);
 	if (topic == nullptr)
 	{
-		send_response(client_pid, Protocol::StatusCode::TOPIC_CLIENT_ERR);
 		return;
 	}
 
 	topic->append_message(key, value);
-	send_response(client_pid, Protocol::StatusCode::SUCCESS);
 }
 
-void Server::handle_subscriber_connect(uint32_t client_pid, const uint8_t* payload, size_t len)
+void Server::handle_subscriber_connect(const uint8_t* payload, size_t len)
 {
+	uint32_t client_pid = 0;
 	std::string topic_name, client_id, prefix;
-	bool has_offset = false;
-	uint32_t req_offset = 0;
+	uint32_t req_offset = Protocol::OFFSET_UNSET;
 
-	if (!decode_subscriber_payload(payload, len, topic_name, client_id, prefix, has_offset, req_offset))
+	if (!Protocol::Request::parse_subscribe(payload, len, client_pid, client_id, topic_name, prefix, req_offset))
 	{
-		send_response(client_pid, Protocol::StatusCode::GENERAL_ERROR);
 		return;
 	}
 
@@ -369,7 +301,7 @@ void Server::handle_subscriber_connect(uint32_t client_pid, const uint8_t* paylo
 	}
 
 	uint32_t start_offset = 0;
-	if (has_offset)
+	if (req_offset != Protocol::OFFSET_UNSET)
 	{
 		start_offset = req_offset;
 	}
@@ -397,13 +329,12 @@ void Server::handle_subscriber_connect(uint32_t client_pid, const uint8_t* paylo
 	(*found_topic)->add_subscriber(client_id, prefix, consumer_ipc, start_offset);
 }
 
-void Server::handle_commit(uint32_t client_pid, const uint8_t* payload, size_t len)
+void Server::handle_commit(const uint8_t* payload, size_t len)
 {
-	(void)client_pid;
 	std::string client_id;
 	uint32_t next_offset = 0;
 
-	if (!decode_commit_payload(payload, len, client_id, next_offset))
+	if (!Protocol::Request::parse_ack(payload, len, client_id, next_offset))
 	{
 		return;
 	}
@@ -416,11 +347,10 @@ void Server::handle_commit(uint32_t client_pid, const uint8_t* payload, size_t l
 	}
 }
 
-void Server::handle_disconnect(uint32_t client_pid, const uint8_t* payload, size_t len)
+void Server::handle_disconnect(const uint8_t* payload, size_t len)
 {
-	(void)client_pid;
 	std::string client_id;
-	if (!decode_single_string(payload, len, client_id))
+	if (!Protocol::Request::parse_disconnect(payload, len, client_id))
 	{
 		return;
 	}
