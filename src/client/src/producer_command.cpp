@@ -165,7 +165,7 @@ int execute_connect_command(const Command& command) {
     return 0;
 }
 
-} // namespace
+}
 
 int execute_producer_command(const Command& command) {
     const int connect_code = execute_connect_command(command);
@@ -184,5 +184,5 @@ int execute_producer_command(const Command& command) {
     return execute_publish_text(command, writer);
 }
 
-} // namespace client
+}
 

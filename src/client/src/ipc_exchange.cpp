@@ -52,4 +52,4 @@ IpcExchangeResult exchange_request(const std::string& server_fifo, std::uint32_t
     return result;
 }
 
-} // namespace client
+}

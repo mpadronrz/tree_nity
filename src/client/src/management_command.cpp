@@ -90,4 +90,4 @@ int execute_info_command(const Command& command) {
     return 0;
 }
 
-} // namespace client
+} 

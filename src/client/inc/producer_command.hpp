@@ -5,9 +5,8 @@
 
 namespace client {
 
-// Ejecuta la conexión del productor y publica los mensajes leídos desde std::cin.
 int execute_producer_command(const Command& command);
 
-} // namespace client
+} 
 
 #endif

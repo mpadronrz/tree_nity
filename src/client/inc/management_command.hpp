@@ -11,6 +11,6 @@ int execute_create_command(const Command& command);
 int execute_list_command(const Command& command);
 int execute_info_command(const Command& command);
 
-} // namespace client
+}
 
 #endif

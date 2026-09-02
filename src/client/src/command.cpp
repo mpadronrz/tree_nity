@@ -6,7 +6,6 @@
 namespace client {
 namespace {
 
-// Crea una estructura con valores seguros para que incluso los errores tengan estado definido.
 Command make_empty_command() {
     Command command = {};
     command.type = Protocol::CommandType::CREATE;
@@ -16,7 +15,6 @@ Command make_empty_command() {
     return command;
 }
 
-// Construye de forma uniforme un resultado de error para el main y para los tests.
 ParseResult make_failure(const std::string& error) {
     ParseResult result = {};
     result.ok = false;
@@ -25,7 +23,6 @@ ParseResult make_failure(const std::string& error) {
     return result;
 }
 
-// Construye un resultado correcto después de completar todas las validaciones necesarias.
 ParseResult make_success(const Command& command) {
     ParseResult result = {};
     result.ok = true;
@@ -33,7 +30,6 @@ ParseResult make_success(const Command& command) {
     return result;
 }
 
-// Comprueba la regla del enunciado para nombres de topic y de suscriptor: 1 a 32 caracteres permitidos.
 bool is_valid_name(const std::string& value) {
     if (value.empty() || value.size() > 32)
         return false;
@@ -46,7 +42,6 @@ bool is_valid_name(const std::string& value) {
     return true;
 }
 
-// Convierte un offset decimal a uint32_t y evita tanto signos como desbordamientos.
 bool parse_offset(const std::string& value, std::uint32_t& offset) {
     if (value.empty())
         return false;
@@ -63,7 +58,6 @@ bool parse_offset(const std::string& value, std::uint32_t& offset) {
     return true;
 }
 
-// Procesa las opciones opcionales exclusivas del subcomando subscribe.
 ParseResult parse_subscribe(int argc, char *const argv[], Command command) {
     if (argc < 5)
         return make_failure("usage: client <ipc_identifier> subscribe <topic_name> <subscriber_name> [--prefix <prefix>] [--offset <offset>] [--raw]");
@@ -80,18 +74,17 @@ ParseResult parse_subscribe(int argc, char *const argv[], Command command) {
     for (int index = 5; index < argc; ++index) {
         const std::string option = argv[index];
 
-        // --raw no recibe valor y solo puede aparecer una vez.
         if (option == "--raw") {
             if (command.raw)
                 return make_failure("duplicate --raw option");
             command.raw = true;
-        // --prefix recibe cualquier cadena, incluido el prefijo vacío que significa "todos".
+
         } else if (option == "--prefix") {
             if (prefix_seen || ++index >= argc)
                 return make_failure("--prefix requires one value and may only be used once");
             command.prefix = argv[index];
             prefix_seen = true;
-        // --offset debe ser un entero sin signo dentro del rango de 32 bits.
+
         } else if (option == "--offset") {
             if (offset_seen || ++index >= argc || !parse_offset(argv[index], command.offset))
                 return make_failure("--offset requires one unsigned 32-bit integer and may only be used once");
@@ -104,10 +97,10 @@ ParseResult parse_subscribe(int argc, char *const argv[], Command command) {
     return make_success(command);
 }
 
-} // namespace
+}
+
 
 ParseResult parse_command(int argc, char *const argv[]) {
-    // Todos los subcomandos comparten, como mínimo, el identificador FIFO y la operación.
     if (argc < 3)
         return make_failure("usage: client <ipc_identifier> <create|list|produce|subscribe|info> ...");
 
@@ -156,4 +149,4 @@ ParseResult parse_command(int argc, char *const argv[]) {
     return make_success(command);
 }
 
-} // namespace client
+}

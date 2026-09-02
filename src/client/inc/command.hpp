@@ -8,7 +8,6 @@
 
 namespace client {
 
-// Agrupa los datos ya validados de una llamada a ./client.
 struct Command {
     Protocol::CommandType type;
     std::string ipc_identifier;
@@ -20,16 +19,13 @@ struct Command {
     bool raw;
 };
 
-// Separa el resultado correcto de un error de sintaxis o de validación.
 struct ParseResult {
     bool ok;
     Command command;
     std::string error;
 };
 
-// Interpreta los argumentos de línea de comandos sin realizar todavía operaciones FIFO.
 ParseResult parse_command(int argc, char *const argv[]);
 
-} // namespace client
-
+}
 #endif

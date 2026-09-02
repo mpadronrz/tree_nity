@@ -139,4 +139,4 @@ int execute_subscriber_command(const Command& command) {
     }
 }
 
-} // namespace client
+}
