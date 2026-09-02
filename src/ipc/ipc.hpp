@@ -31,7 +31,7 @@ namespace ipc {
         static FifoReader create(const std::string& path, bool read_write = false);
 
         // Guarantees all count bytes are read; retries on EINTR, returns false on EOF/error
-        bool read_exact(void* dest, size_t count);
+        bool read_exact(void* dest, size_t count, int timeout_ms = -1);
 
         [[nodiscard]] int fd() const noexcept { return fd_; }
         [[nodiscard]] bool is_open() const noexcept { return fd_ >= 0; }
