@@ -1,13 +1,18 @@
 #ifndef CLIENT_IPC_EXCHANGE_HPP
 #define CLIENT_IPC_EXCHANGE_HPP
 
-#include "protocol_io.hpp"
+#include "protocol/Protocol.hpp"
 
 #include <cstdint>
 #include <string>
 #include <vector>
 
 namespace client {
+
+struct ResponseFrame {
+    Protocol::StatusCode code = Protocol::StatusCode::SUCCESS;
+    std::vector<unsigned char> payload;
+};
 
 // Distingue un identificador de servidor inválido de un fallo durante una comunicación ya iniciada.
 enum class IpcExchangeStatus {
@@ -19,7 +24,6 @@ enum class IpcExchangeStatus {
 
 struct IpcExchangeResult {
     IpcExchangeStatus status = IpcExchangeStatus::Complete;
-    int error_number = 0;
     ResponseFrame response = {};
 };
 

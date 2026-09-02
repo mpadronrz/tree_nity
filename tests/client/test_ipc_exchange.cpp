@@ -79,7 +79,7 @@ TEST(ClientIpcExchange, ExchangesRequestAndCleansPrivateFifo) {
     ASSERT_TRUE(client::build_request_frame(2U, client_pid, request, valid_request));
 
     std::thread server(serve_one_request, server_fifo, client_pid);
-    const client::IpcExchangeResult result = client::old_exchange_request(server_fifo, client_pid, valid_request);
+    const client::IpcExchangeResult result = client::exchange_request(server_fifo, client_pid, valid_request);
     server.join();
 
     EXPECT_EQ(result.status, client::IpcExchangeStatus::Complete);
@@ -101,7 +101,7 @@ TEST(ClientIpcExchange, DetectsUnavailableServer) {
     std::vector<unsigned char> valid_request;
     ASSERT_TRUE(client::build_request_frame(2U, client_pid, request, valid_request));
 
-    const client::IpcExchangeResult result = client::old_exchange_request(
+    const client::IpcExchangeResult result = client::exchange_request(
         "/tmp/treenity-no-server-for-client-tests", client_pid, valid_request);
     EXPECT_EQ(result.status, client::IpcExchangeStatus::ServerUnavailable);
     EXPECT_TRUE(result.error_number == ENOENT || result.error_number == ENXIO);
