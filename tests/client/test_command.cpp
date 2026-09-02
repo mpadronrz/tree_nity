@@ -18,7 +18,7 @@ client::ParseResult parse(std::initializer_list<const char *> arguments) {
 TEST(ClientCommandParser, ParsesCreate) {
     const client::ParseResult result = parse({"client", "/tmp/tree.42", "create", "user_events"});
     ASSERT_TRUE(result.ok);
-    EXPECT_EQ(result.command.type, client::CommandType::Create);
+    EXPECT_EQ(result.command.type, Protocol::CommandType::CREATE);
     EXPECT_EQ(result.command.topic, "user_events");
 }
 

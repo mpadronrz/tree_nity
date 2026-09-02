@@ -1,6 +1,7 @@
 #include "subscription_io.hpp"
 
 #include "fifo_io.hpp"
+#include "protocol/Protocol.hpp"
 
 #include <cstdint>
 #include <limits>
@@ -52,47 +53,39 @@ SubscriptionReadResult read_subscription_message(int file_descriptor, Subscripti
     SubscriptionReadResult result = {};
     result.status = SubscriptionReadStatus::Message;
     result.error_number = 0;
-    unsigned char bytes[4] = {};
+    unsigned char header_bytes[12] = {};
 
-    FifoReadResult field_read = read_exact(file_descriptor, bytes, sizeof(bytes));
-    if (field_read.status != FifoReadStatus::Complete) {
-        result.status = status_from_fifo(field_read.status);
-        result.error_number = field_read.error_number;
+    FifoReadResult header_read = read_exact(file_descriptor, header_bytes, sizeof(header_bytes));
+    if (header_read.status != FifoReadStatus::Complete) {
+        result.status = status_from_fifo(header_read.status);
+        result.error_number = header_read.error_number;
         return result;
     }
-    message.offset = decode_uint32(bytes);
 
-    field_read = read_exact(file_descriptor, bytes, sizeof(bytes));
-    if (field_read.status != FifoReadStatus::Complete) {
-        result.status = status_from_fifo(field_read.status);
-        result.error_number = field_read.error_number;
+    message.offset = decode_uint32(header_bytes);
+    if (Protocol::Response::is_shutdown(message.offset)) {
+        result.status = SubscriptionReadStatus::EndOfFile;
         return result;
     }
-    const std::uint32_t key_size = decode_uint32(bytes);
-    if (key_size > kMaximumMessageSize) {
+
+    const std::uint32_t key_size = decode_uint32(header_bytes + 4);
+    const std::uint32_t value_size = decode_uint32(header_bytes + 8);
+
+    if (key_size > kMaximumMessageSize || value_size > kMaximumMessageSize - key_size) {
         result.status = SubscriptionReadStatus::InvalidMessage;
         return result;
     }
+
     if (!read_string(file_descriptor, key_size, message.message.key, result.error_number)) {
         result.status = SubscriptionReadStatus::InvalidMessage;
         return result;
     }
 
-    field_read = read_exact(file_descriptor, bytes, sizeof(bytes));
-    if (field_read.status != FifoReadStatus::Complete) {
-        result.status = status_from_fifo(field_read.status);
-        result.error_number = field_read.error_number;
-        return result;
-    }
-    const std::uint32_t value_size = decode_uint32(bytes);
-    if (value_size > kMaximumMessageSize - key_size) {
-        result.status = SubscriptionReadStatus::InvalidMessage;
-        return result;
-    }
     if (!read_string(file_descriptor, value_size, message.message.value, result.error_number)) {
         result.status = SubscriptionReadStatus::InvalidMessage;
         return result;
     }
+
     return result;
 }
 

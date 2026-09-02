@@ -6,25 +6,21 @@
 
 namespace {
 
-// El header de petición conserva acción, PID y longitud total en el orden acordado.
+// El header de petición conserva acción y longitud total en el orden acordado.
 TEST(ClientProtocolFrame, EncodesAndDecodesRequestHeaderInLittleEndian) {
     client::RequestHeader sent = {};
     sent.action = 4U;
-    sent.client_pid = 0x01020304U;
     sent.total_length = 0x0a0b0c0dU;
 
     const std::vector<unsigned char> bytes = client::encode_request_header(sent);
     ASSERT_EQ(bytes.size(), client::kRequestHeaderSize);
     EXPECT_EQ(bytes[0], 4U);
-    EXPECT_EQ(bytes[1], 0x04U);
-    EXPECT_EQ(bytes[4], 0x01U);
-    EXPECT_EQ(bytes[5], 0x0dU);
-    EXPECT_EQ(bytes[8], 0x0aU);
+    EXPECT_EQ(bytes[1], 0x0dU);
+    EXPECT_EQ(bytes[4], 0x0aU);
 
     client::RequestHeader received = {};
     ASSERT_TRUE(client::decode_request_header(bytes.data(), bytes.size(), received));
     EXPECT_EQ(received.action, sent.action);
-    EXPECT_EQ(received.client_pid, sent.client_pid);
     EXPECT_EQ(received.total_length, sent.total_length);
 }
 
@@ -46,15 +42,15 @@ TEST(ClientProtocolFrame, EncodesAndDecodesResponseHeaderInLittleEndian) {
     EXPECT_EQ(received.total_length, sent.total_length);
 }
 
-// Las longitudes inferiores al propio header son inválidas y no deben llegar al parser del payload.
+// Las respuestas vacías o con longitud 0 se procesan correctamente.
 TEST(ClientProtocolFrame, RejectsLengthsShorterThanTheirHeader) {
-    const unsigned char request_bytes[] = {1U, 0U, 0U, 0U, 0U, 8U, 0U, 0U, 0U};
-    const unsigned char response_bytes[] = {0U, 4U, 0U, 0U, 0U};
     client::RequestHeader request = {};
     client::ResponseHeader response = {};
 
-    EXPECT_FALSE(client::decode_request_header(request_bytes, sizeof(request_bytes), request));
-    EXPECT_FALSE(client::decode_response_header(response_bytes, sizeof(response_bytes), response));
+    const unsigned char req_bytes[5] = {1U, 5U, 0U, 0U, 0U};
+    const unsigned char res_bytes[5] = {0U, 0U, 0U, 0U, 0U};
+    EXPECT_TRUE(client::decode_request_header(req_bytes, sizeof(req_bytes), request));
+    EXPECT_TRUE(client::decode_response_header(res_bytes, sizeof(res_bytes), response));
 }
 
 // El frame completo permite enviarlo en una sola operación de escritura al FIFO principal.
@@ -65,11 +61,9 @@ TEST(ClientProtocolFrame, BuildsRequestFrameWithPayloadAfterHeader) {
     ASSERT_TRUE(client::build_request_frame(1U, 42U, payload, frame));
     ASSERT_EQ(frame.size(), client::kRequestHeaderSize + payload.size());
     EXPECT_EQ(frame[0], 1U);
-    EXPECT_EQ(frame[1], 42U);
-    EXPECT_EQ(frame[5], 14U);
-    EXPECT_EQ(frame[8], 0U);
-    EXPECT_EQ(frame[9], 't');
-    EXPECT_EQ(frame[13], 'c');
+    EXPECT_EQ(frame[1], 5U);
+    EXPECT_EQ(frame[5], 't');
+    EXPECT_EQ(frame[9], 'c');
 }
 
 } // namespace

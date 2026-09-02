@@ -7,8 +7,9 @@
 
 namespace client {
 
-// Ejecuta create, list o info mediante FIFO y escribe únicamente la salida exigida por el subject.
-int execute_management_command(const Command& command, std::ostream& output, std::ostream& error_output);
+int execute_create_command(const Command& command);
+int execute_list_command(const Command& command);
+int execute_info_command(const Command& command);
 
 } // namespace client
 

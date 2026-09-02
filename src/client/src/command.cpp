@@ -9,7 +9,7 @@ namespace {
 // Crea una estructura con valores seguros para que incluso los errores tengan estado definido.
 Command make_empty_command() {
     Command command = {};
-    command.type = CommandType::List;
+    command.type = Protocol::CommandType::CREATE;
     command.offset = 0;
     command.has_offset = false;
     command.raw = false;
@@ -120,18 +120,18 @@ ParseResult parse_command(int argc, char *const argv[]) {
     if (operation == "create") {
         if (argc != 4)
             return make_failure("usage: client <ipc_identifier> create <topic_name>");
-        command.type = CommandType::Create;
+        command.type = Protocol::CommandType::CREATE;
         command.topic = argv[3];
         if (!is_valid_name(command.topic))
             return make_failure("invalid topic name");
     } else if (operation == "list") {
         if (argc != 3)
             return make_failure("usage: client <ipc_identifier> list");
-        command.type = CommandType::List;
+        command.type = Protocol::CommandType::LIST;
     } else if (operation == "produce") {
         if (argc != 4 && argc != 5)
             return make_failure("usage: client <ipc_identifier> produce <topic_name> [--raw]");
-        command.type = CommandType::Produce;
+        command.type = Protocol::CommandType::CONNECT;
         command.topic = argv[3];
         if (!is_valid_name(command.topic))
             return make_failure("invalid topic name");
@@ -141,12 +141,12 @@ ParseResult parse_command(int argc, char *const argv[]) {
             command.raw = true;
         }
     } else if (operation == "subscribe") {
-        command.type = CommandType::Subscribe;
+        command.type = Protocol::CommandType::SUBSCRIBE;
         return parse_subscribe(argc, argv, command);
     } else if (operation == "info") {
         if (argc != 4)
             return make_failure("usage: client <ipc_identifier> info <subscriber_name>");
-        command.type = CommandType::Info;
+        command.type = Protocol::CommandType::INFO;
         command.subscriber = argv[3];
         if (!is_valid_name(command.subscriber))
             return make_failure("invalid subscriber name");

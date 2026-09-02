@@ -1,23 +1,16 @@
 #ifndef CLIENT_COMMAND_HPP
 #define CLIENT_COMMAND_HPP
 
+#include "protocol/Protocol.hpp"
+
 #include <cstdint>
 #include <string>
 
 namespace client {
 
-// Identifica la acción que el cliente debe solicitar posteriormente al servidor.
-enum class CommandType {
-    Create,
-    List,
-    Produce,
-    Subscribe,
-    Info
-};
-
 // Agrupa los datos ya validados de una llamada a ./client.
 struct Command {
-    CommandType type;
+    Protocol::CommandType type;
     std::string ipc_identifier;
     std::string topic;
     std::string subscriber;

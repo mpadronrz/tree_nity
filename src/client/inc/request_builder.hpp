@@ -31,6 +31,10 @@ bool build_single_string_request(RequestAction action, std::uint32_t client_pid,
 bool build_two_string_request(RequestAction action, std::uint32_t client_pid,
     const std::string& first, const std::string& second, std::vector<unsigned char>& frame);
 
+// Construye un request de publicación especificando el topic, clave y valor.
+bool build_publish_request(const std::string& topic, const std::string& key,
+    const std::string& value, std::vector<unsigned char>& frame);
+
 // Construye el request completo para registrar un consumidor y sus opciones de lectura.
 bool build_subscriber_request(std::uint32_t client_pid, const std::string& topic,
     const std::string& subscriber, const std::string& prefix, bool has_offset,

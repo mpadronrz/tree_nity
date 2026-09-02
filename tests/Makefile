@@ -25,7 +25,7 @@ TEST_OBJS   = $(TEST_SRCS:%.cpp=$(TEST_OBJ_DIR)/%.o)
 
 GTEST_OBJS     := $(TEST_OBJ_DIR)/gtest-all.o
 
-TESTED_SRCS = $(SRC_DIR)/data_structures/PrefixTree.cpp $(SRC_DIR)/protocol/Protocol.cpp $(SRC_DIR)/client/src/command.cpp $(SRC_DIR)/client/src/message_parser.cpp \
+TESTED_SRCS = $(SRC_DIR)/ipc/ipc.cpp $(SRC_DIR)/data_structures/PrefixTree.cpp $(SRC_DIR)/protocol/Protocol.cpp $(SRC_DIR)/client/src/command.cpp $(SRC_DIR)/client/src/message_parser.cpp \
 	$(SRC_DIR)/client/src/message_output.cpp $(SRC_DIR)/client/src/exit_status.cpp \
 	$(SRC_DIR)/client/src/fifo_io.cpp $(SRC_DIR)/client/src/shutdown_signal.cpp \
 	$(SRC_DIR)/client/src/protocol_frame.cpp $(SRC_DIR)/client/src/protocol_payload.cpp \

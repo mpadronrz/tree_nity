@@ -1,6 +1,7 @@
 #include "protocol_io.hpp"
 
 #include "protocol_frame.hpp"
+#include "protocol/Protocol.hpp"
 
 namespace client {
 namespace {
@@ -29,7 +30,7 @@ ResponseReadResult read_response_frame(int file_descriptor, ResponseFrame& respo
     ResponseReadResult result = {};
     result.status = ResponseReadStatus::Complete;
     result.error_number = 0;
-    response.code = 0;
+    response.code = static_cast<Protocol::StatusCode>(0);
     response.payload.clear();
 
     const FifoReadResult header_read = read_exact(file_descriptor, header_bytes, kResponseHeaderSize);
@@ -45,8 +46,8 @@ ResponseReadResult read_response_frame(int file_descriptor, ResponseFrame& respo
         return result;
     }
 
-    const std::size_t payload_size = static_cast<std::size_t>(header.total_length - kResponseHeaderSize);
-    response.code = header.code;
+    const std::size_t payload_size = static_cast<std::size_t>(header.total_length);
+    response.code = static_cast<Protocol::StatusCode>(header.code);
     response.payload.resize(payload_size);
     if (payload_size == 0U)
         return result;

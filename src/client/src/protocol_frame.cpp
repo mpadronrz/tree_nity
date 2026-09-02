@@ -28,7 +28,6 @@ std::vector<unsigned char> encode_request_header(const RequestHeader& header) {
     std::vector<unsigned char> bytes;
     bytes.reserve(kRequestHeaderSize);
     bytes.push_back(header.action);
-    append_little_endian_uint32(bytes, header.client_pid);
     append_little_endian_uint32(bytes, header.total_length);
     return bytes;
 }
@@ -46,9 +45,8 @@ bool decode_request_header(const unsigned char* bytes, std::size_t size, Request
         return false;
 
     header.action = bytes[0];
-    header.client_pid = read_little_endian_uint32(bytes + 1);
-    header.total_length = read_little_endian_uint32(bytes + 5);
-    return header.total_length >= kRequestHeaderSize;
+    header.total_length = read_little_endian_uint32(bytes + 1);
+    return true;
 }
 
 bool decode_response_header(const unsigned char* bytes, std::size_t size, ResponseHeader& header) {
@@ -57,18 +55,18 @@ bool decode_response_header(const unsigned char* bytes, std::size_t size, Respon
 
     header.code = bytes[0];
     header.total_length = read_little_endian_uint32(bytes + 1);
-    return header.total_length >= kResponseHeaderSize;
+    return true;
 }
 
 bool build_request_frame(std::uint8_t action, std::uint32_t client_pid,
     const std::vector<unsigned char>& payload, std::vector<unsigned char>& frame) {
-    if (payload.size() > static_cast<std::size_t>(std::numeric_limits<std::uint32_t>::max()) - kRequestHeaderSize)
+    (void)client_pid;
+    if (payload.size() > static_cast<std::size_t>(std::numeric_limits<std::uint32_t>::max()))
         return false;
 
     RequestHeader header = {};
     header.action = action;
-    header.client_pid = client_pid;
-    header.total_length = static_cast<std::uint32_t>(kRequestHeaderSize + payload.size());
+    header.total_length = static_cast<std::uint32_t>(payload.size());
     frame = encode_request_header(header);
     frame.insert(frame.end(), payload.begin(), payload.end());
     return true;

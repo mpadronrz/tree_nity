@@ -7,18 +7,17 @@
 
 namespace client {
 
-// Los encabezados permiten recibir primero una comunicación completa y parsearla después.
-const std::size_t kRequestHeaderSize = 9;
+// Los encabezados de 5 bytes permiten recibir primero el tipo/código y la longitud del payload.
+const std::size_t kRequestHeaderSize = 5;
 const std::size_t kResponseHeaderSize = 5;
 
-// Describe los nueve bytes iniciales de toda petición enviada al FIFO principal del servidor.
+// Describe los cinco bytes iniciales de toda petición enviada al servidor (action + payload_len).
 struct RequestHeader {
     std::uint8_t action;
-    std::uint32_t client_pid;
     std::uint32_t total_length;
 };
 
-// Describe los cinco bytes iniciales de toda respuesta recibida desde el servidor.
+// Describe los cinco bytes iniciales de toda respuesta recibida desde el servidor (code + payload_len).
 struct ResponseHeader {
     std::uint8_t code;
     std::uint32_t total_length;

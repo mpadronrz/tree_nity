@@ -1,5 +1,6 @@
 #include "message_output.hpp"
 
+#include <iostream>
 #include <limits>
 
 namespace client {
@@ -45,6 +46,21 @@ bool write_raw_message(std::ostream& output, std::uint32_t offset, const Message
         return false;
     output.write(message.value.data(), static_cast<std::streamsize>(message.value.size()));
     return output.good();
+}
+
+void write_output(const std::vector<unsigned char>& payload) {
+    if (!payload.empty())
+        std::cout.write(reinterpret_cast<const char*>(payload.data()), static_cast<std::streamsize>(payload.size()));
+    std::cout.put('\n');
+}
+
+void write_error(const std::vector<unsigned char>& payload) {
+    if (payload.empty()) {
+        std::cerr << "server returned an error" << '\n';
+        return;
+    }
+    std::cerr.write(reinterpret_cast<const char*>(payload.data()), static_cast<std::streamsize>(payload.size()));
+    std::cerr.put('\n');
 }
 
 } // namespace client
