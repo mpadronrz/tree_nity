@@ -1,5 +1,6 @@
-#include "Fifo.hpp"
+#include "ipc.hpp"
 
+#include <poll.h>
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -74,12 +75,28 @@ namespace ipc {
         return FifoReader(fd, path);
     }
 
-    bool FifoReader::read_exact(void* dest, size_t count) {
+    bool FifoReader::read_exact(void* dest, size_t count, int timeout_ms) {
         if (fd_ < 0) return false;
         size_t total = 0;
         auto* ptr = static_cast<uint8_t*>(dest);
 
         while (total < count) {
+            if (timeout_ms >= 0) {
+                struct pollfd pfd{};
+                pfd.fd = fd_;
+                pfd.events = POLLIN;
+
+                int ret = ::poll(&pfd, 1, timeout_ms);
+                if (ret == 0) {
+                    // Deadline expired: sender stalled or server failed to reply
+                    return false;
+                }
+                if (ret < 0) {
+                    if (errno == EINTR) continue; // Interrupted by signal, retry poll
+                    return false;
+                }
+            }
+
             ssize_t n = ::read(fd_, ptr + total, count - total);
             if (n < 0) {
                 if (errno == EINTR) continue;
