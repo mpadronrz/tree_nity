@@ -22,11 +22,14 @@ int main(int argc, char *argv[]) {
     }
 
     // Las operaciones de gestión ya comparten el ciclo completo de request y response por FIFO.
-    if (result.command.type == client::CommandType::Create || result.command.type == client::CommandType::List
-        || result.command.type == client::CommandType::Info)
-        return client::execute_management_command(result.command, std::cout, std::cerr);
-    if (result.command.type == client::CommandType::Produce)
-        return client::execute_producer_command(result.command, std::cin, std::cerr);
+    if (result.command.type == Protocol::CommandType::CREATE)
+        return client::execute_create_command(result.command);
+    else if (result.command.type == Protocol::CommandType::LIST)
+        return client::execute_list_command(result.command);
+    else if (result.command.type == Protocol::CommandType::INFO)
+        return client::execute_info_command(result.command);
+    else if (result.command.type == Protocol::CommandType::CONNECT)
+        return client::execute_producer_command(result.command);
 
-    return client::execute_subscriber_command(result.command, std::cout, std::cerr);
+    return client::execute_subscriber_command(result.command);
 }

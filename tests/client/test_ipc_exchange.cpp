@@ -42,7 +42,7 @@ void serve_one_request(const std::string& server_fifo, std::uint32_t client_pid)
         close(server_descriptor);
         return;
     }
-    const std::size_t payload_size = decoded_header.total_length - client::kRequestHeaderSize;
+    const std::size_t payload_size = decoded_header.total_length;
     std::vector<unsigned char> request_payload(payload_size);
     if (payload_size > 0U) {
         const client::FifoReadResult payload_read = client::read_exact(server_descriptor,
@@ -58,7 +58,7 @@ void serve_one_request(const std::string& server_fifo, std::uint32_t client_pid)
     const int response_descriptor = open(response_fifo.c_str(), O_WRONLY);
     if (response_descriptor == -1)
         return;
-    const client::ResponseHeader response_header = {0U, 7U};
+    const client::ResponseHeader response_header = {0U, 2U};
     const std::vector<unsigned char> response_bytes = client::encode_response_header(response_header);
     const unsigned char payload[] = {'o', 'k'};
     int error_number = 0;
@@ -79,11 +79,11 @@ TEST(ClientIpcExchange, ExchangesRequestAndCleansPrivateFifo) {
     ASSERT_TRUE(client::build_request_frame(2U, client_pid, request, valid_request));
 
     std::thread server(serve_one_request, server_fifo, client_pid);
-    const client::IpcExchangeResult result = client::exchange_request(server_fifo, client_pid, valid_request);
+    const client::IpcExchangeResult result = client::old_exchange_request(server_fifo, client_pid, valid_request);
     server.join();
 
     EXPECT_EQ(result.status, client::IpcExchangeStatus::Complete);
-    EXPECT_EQ(result.response.code, 0U);
+    EXPECT_EQ(static_cast<int>(result.response.code), 0);
     ASSERT_EQ(result.response.payload.size(), 2U);
     EXPECT_EQ(result.response.payload[0], 'o');
     EXPECT_EQ(result.response.payload[1], 'k');
@@ -101,7 +101,7 @@ TEST(ClientIpcExchange, DetectsUnavailableServer) {
     std::vector<unsigned char> valid_request;
     ASSERT_TRUE(client::build_request_frame(2U, client_pid, request, valid_request));
 
-    const client::IpcExchangeResult result = client::exchange_request(
+    const client::IpcExchangeResult result = client::old_exchange_request(
         "/tmp/treenity-no-server-for-client-tests", client_pid, valid_request);
     EXPECT_EQ(result.status, client::IpcExchangeStatus::ServerUnavailable);
     EXPECT_TRUE(result.error_number == ENOENT || result.error_number == ENXIO);

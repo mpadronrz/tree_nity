@@ -8,7 +8,7 @@
 namespace client {
 
 // Registra un consumidor, escucha su FIFO dedicado, imprime mensajes y confirma cada offset.
-int execute_subscriber_command(const Command& command, std::ostream& output, std::ostream& error_output);
+int execute_subscriber_command(const Command& command);
 
 } // namespace client
 

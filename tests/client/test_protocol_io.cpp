@@ -17,7 +17,7 @@ void close_pipe(int descriptors[2]) {
 TEST(ClientProtocolIo, ReadsCompleteResponseFrame) {
     int descriptors[2] = {};
     ASSERT_EQ(pipe(descriptors), 0);
-    const client::ResponseHeader header = {0U, 8U};
+    const client::ResponseHeader header = {0U, 3U};
     const std::vector<unsigned char> header_bytes = client::encode_response_header(header);
     const std::vector<unsigned char> payload = {'o', 'k', '!'};
     int error_number = 0;
@@ -28,7 +28,7 @@ TEST(ClientProtocolIo, ReadsCompleteResponseFrame) {
     close(descriptors[1]);
     const client::ResponseReadResult result = client::read_response_frame(descriptors[0], response);
     EXPECT_EQ(result.status, client::ResponseReadStatus::Complete);
-    EXPECT_EQ(response.code, 0U);
+    EXPECT_EQ(static_cast<int>(response.code), 0);
     EXPECT_EQ(response.payload, payload);
     close(descriptors[0]);
 }
@@ -37,7 +37,7 @@ TEST(ClientProtocolIo, ReadsCompleteResponseFrame) {
 TEST(ClientProtocolIo, ReadsResponseWithoutPayload) {
     int descriptors[2] = {};
     ASSERT_EQ(pipe(descriptors), 0);
-    const client::ResponseHeader header = {0U, 5U};
+    const client::ResponseHeader header = {0U, 0U};
     const std::vector<unsigned char> header_bytes = client::encode_response_header(header);
     int error_number = 0;
     client::ResponseFrame response = {};
@@ -54,7 +54,7 @@ TEST(ClientProtocolIo, ReadsResponseWithoutPayload) {
 TEST(ClientProtocolIo, DetectsPartialResponsePayload) {
     int descriptors[2] = {};
     ASSERT_EQ(pipe(descriptors), 0);
-    const client::ResponseHeader header = {0U, 8U};
+    const client::ResponseHeader header = {0U, 3U};
     const std::vector<unsigned char> header_bytes = client::encode_response_header(header);
     const unsigned char partial_payload[] = {'o', 'k'};
     int error_number = 0;
