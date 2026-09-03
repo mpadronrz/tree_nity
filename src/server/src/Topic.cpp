@@ -50,8 +50,16 @@ bool Topic::add_subscriber(const std::string& client_id, const std::string& pref
 {
 	std::lock_guard<std::mutex> lock(topic_mutex);
 
-	if (subscribers.contains(client_id))
-		return false;
+	ActiveSubscriber* old_sub = subscribers.find(client_id);
+	if (old_sub != nullptr) {
+		prefix_tree.remove(old_sub->prefix, client_id);
+		if (old_sub->fifo_fd != -1)
+		{
+			close(old_sub->fifo_fd);
+			old_sub->fifo_fd = -1;
+		}
+		subscribers.erase(client_id);
+	}
 
 	// Abrimos la FIFO dedicada del cliente en modo escritura
 	int fd = open(fifo_path.c_str(), O_WRONLY | O_NONBLOCK);

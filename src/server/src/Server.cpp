@@ -1,5 +1,6 @@
 #include "server/inc/Server.hpp"
 #include "protocol/Protocol.hpp"
+#include "ipc/ipc.hpp"
 
 #include <unistd.h>
 #include <fcntl.h>
@@ -295,7 +296,7 @@ void Server::handle_subscriber_connect(const uint8_t* payload, size_t len)
 	}
 
 	ClientMetadata* meta = client_index.find(client_id);
-	if (meta != nullptr && meta->is_active)
+	if (meta != nullptr && meta->is_active && ipc::is_reader_active(meta->ipc_path))
 	{
 		// Suscriptor duplicado ya activo
 		send_response(client_pid, Protocol::StatusCode::TOPIC_CLIENT_ERR);
