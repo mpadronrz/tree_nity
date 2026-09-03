@@ -3,7 +3,7 @@
 #include <iostream>
 #include <unistd.h>
 
-// Puntero global temporal solo para que la señal pueda avisar al Server
+// Global variable for SIG interactions
 Server* g_server = nullptr;
 
 void signal_handler(int signum)

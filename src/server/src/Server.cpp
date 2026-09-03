@@ -50,7 +50,7 @@ void Server::stop()
 
 	unlink(ipc_path.c_str());
 
-	// Escribimos un byte en la FIFO para despertar cualquier read() bloqueado
+	// Writes in a file for waking up any blocked read()
 	int dummy_fd = open(ipc_path.c_str(), O_WRONLY | O_NONBLOCK);
 	if (dummy_fd != -1)
 	{
@@ -93,14 +93,14 @@ void Server::run()
 		{
 			recv_buf.insert(recv_buf.end(), buffer, buffer + bytes_read);
 
-			// Cabecera de petición del cliente: 5 bytes (action: 1B, payload_len: 4B LE)
+			// Action (1) + len (4)
 			while (recv_buf.size() >= 5)
 			{
 				uint8_t action = recv_buf[0];
 				uint32_t payload_len = Protocol::read_uint32_le(recv_buf.data() + 1);
 
 				if (recv_buf.size() < 5 + payload_len)
-					break; // Esperamos a que lleguen los bytes restantes de la trama
+					break;
 
 				const uint8_t* payload = recv_buf.data() + 5;
 
@@ -298,20 +298,16 @@ void Server::handle_subscriber_connect(const uint8_t* payload, size_t len)
 	ClientMetadata* meta = client_index.find(client_id);
 	if (meta != nullptr && meta->is_active && ipc::is_reader_active(meta->ipc_path))
 	{
-		// Suscriptor duplicado ya activo
+		// Duplicated sub already connected
 		send_response(client_pid, Protocol::StatusCode::TOPIC_CLIENT_ERR);
 		return;
 	}
 
 	uint32_t start_offset = 0;
 	if (req_offset != Protocol::OFFSET_UNSET)
-	{
 		start_offset = req_offset;
-	}
 	else if (meta != nullptr)
-	{
 		start_offset = meta->offset;
-	}
 
 	std::string consumer_ipc = "/tmp/treenity.client." + std::to_string(client_pid);
 
@@ -324,11 +320,7 @@ void Server::handle_subscriber_connect(const uint8_t* payload, size_t len)
 	new_meta.is_active = true;
 
 	client_index.insert_or_assign(client_id, new_meta);
-
-	// Responder SUCCESS al cliente síncrono
 	send_response(client_pid, Protocol::StatusCode::SUCCESS);
-
-	// Dar de alta al suscriptor en el Topic
 	(*found_topic)->add_subscriber(client_id, prefix, consumer_ipc, start_offset);
 }
 

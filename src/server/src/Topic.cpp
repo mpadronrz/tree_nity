@@ -25,7 +25,7 @@ void Topic::shutdown()
 			return;
 		stop_flag = true;
 
-		// Enviar mensaje centinela a todos los suscriptores activos
+		// Sending message to all clients
 		auto shutdown_buf = Protocol::Response::serialize_shutdown();
 		for (auto& pair : subscribers)
 		{
@@ -61,7 +61,6 @@ bool Topic::add_subscriber(const std::string& client_id, const std::string& pref
 		subscribers.erase(client_id);
 	}
 
-	// Abrimos la FIFO dedicada del cliente en modo escritura
 	int fd = open(fifo_path.c_str(), O_WRONLY | O_NONBLOCK);
 	if (fd == -1)
 		return false;
@@ -77,7 +76,6 @@ bool Topic::add_subscriber(const std::string& client_id, const std::string& pref
 
 	subscribers.insert(client_id, sub);
 
-	// Despertamos al hilo por si hay mensajes acumulados pendientes de entrega
 	cv.notify_all();
 	return true;
 }
@@ -135,7 +133,6 @@ void Topic::run()
 	{
 		std::unique_lock<std::mutex> lock(topic_mutex);
 
-		// El hilo espera si no hay orden de parada y ningún suscriptor tiene trabajo pendiente
 		auto has_work = [this]() {
 			if (stop_flag)
 				return true;
@@ -151,7 +148,6 @@ void Topic::run()
 		if (stop_flag)
 			break;
 
-		// Procesamos la entrega de mensajes pendientes para cada suscriptor activo
 		for (auto& pair : subscribers)
 		{
 			ActiveSubscriber& sub = pair.second;
@@ -159,7 +155,7 @@ void Topic::run()
 			{
 				const Message& msg = messages[sub.next_offset];
 
-				// Comprobamos si la clave del mensaje coincide con el filtro del suscriptor
+				// Matching the message key with the sub
 				auto matching_clients = prefix_tree.match(msg.key);
 				bool is_matched = std::find(matching_clients.begin(), matching_clients.end(), sub.client_id) != matching_clients.end();
 
