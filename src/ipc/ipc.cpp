@@ -16,7 +16,7 @@ namespace ipc {
             ::close(fd);
             return true;
         }
-        return (errno != ENXIO);
+        return false;
     }
 
     FifoReader::FifoReader(int fd, std::string path)
