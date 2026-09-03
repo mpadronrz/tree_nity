@@ -15,7 +15,7 @@ CLIENT_BIN	= $(BIN_DIR)/client
 
 SERVER_SRCS = $(SRC_DIR)/main.cpp $(SERVER_DIR)/src/Server.cpp \
 	$(SERVER_DIR)/src/Topic.cpp $(SRC_DIR)/protocol/Protocol.cpp \
-	$(SRC_DIR)/data_structures/PrefixTree.cpp
+	$(SRC_DIR)/data_structures/PrefixTree.cpp $(SRC_DIR)/ipc/ipc.cpp
 SERVER_OBJS = $(SERVER_SRCS:%.cpp=$(OBJ_DIR)/%.o)
 
 CLIENT_SRCS = $(CLIENT_DIR)/src/main.cpp $(CLIENT_DIR)/src/command.cpp \
