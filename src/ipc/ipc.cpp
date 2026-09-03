@@ -46,7 +46,7 @@ namespace ipc {
     FifoReader FifoReader::create(const std::string& path, bool read_write) {
         ::unlink(path.c_str());
 
-        if (::mkfifo(path.c_str(), 0666) == -1 && errno != EEXIST) {
+        if (::mkfifo(path.c_str(), 0666) == -1) {
             return FifoReader(-1, "");
         }
 
