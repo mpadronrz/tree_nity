@@ -3,5 +3,6 @@
 objs/
 tests/objs_tests
 tests/tests
-bin/
+client
+server
 gitinette
