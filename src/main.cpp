@@ -10,10 +10,8 @@ void signal_handler(int signum)
 {
     (void)signum;
     if (g_server != nullptr)
-	{
-        // Le avisamos al servidor que empiece el apagado
-        g_server->stop(); 
-    }
+        g_server->stop();
+    std::cout << "\rCtrl + C pressed\n";
 }
 
 int main()
@@ -23,15 +21,21 @@ int main()
     Server server(ipc_path);
     g_server = &server;
 
-    // Registramos la captura de SIGINT, SIGTERM e ignoramos SIGPIPE para desconexiones de clientes
+    if (!server.is_correct_start())
+    {
+        std::cout << "Server fifo creation failed\n";
+        return (1);
+    }
+
+    // SIGPIPE is ignored for client disconnection
     std::signal(SIGINT, signal_handler);
     std::signal(SIGTERM, signal_handler);
     std::signal(SIGPIPE, SIG_IGN);
 
-    std::cout << ipc_path << std::endl; // Exigido por el subject
+    std::cout << ipc_path << std::endl;
 
-    // Bucle principal del servidor
-    server.run(); 
+    // Main loop
+    server.run();
 
     return 0;
 }

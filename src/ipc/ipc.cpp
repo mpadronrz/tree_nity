@@ -10,11 +10,6 @@
 #include <utility>
 
 namespace ipc {
-
-    void ignore_sigpipe() noexcept {
-        std::signal(SIGPIPE, SIG_IGN);
-    }
-
     bool is_reader_active(const std::string& path) {
         int fd = ::open(path.c_str(), O_WRONLY | O_NONBLOCK);
         if (fd >= 0) {
@@ -24,9 +19,6 @@ namespace ipc {
         return (errno != ENXIO);
     }
 
-    // ------------------------------------------------------------------------
-    // FifoReader Implementation
-    // ------------------------------------------------------------------------
     FifoReader::FifoReader(int fd, std::string path)
         : fd_(fd), path_(std::move(path)) {}
 
@@ -52,7 +44,6 @@ namespace ipc {
     }
 
     FifoReader FifoReader::create(const std::string& path, bool read_write) {
-        // Remove stale node if it exists
         ::unlink(path.c_str());
 
         if (::mkfifo(path.c_str(), 0666) == -1 && errno != EEXIST) {
@@ -66,7 +57,6 @@ namespace ipc {
             return FifoReader(-1, "");
         }
 
-        // If opened with O_NONBLOCK, clear it back to normal blocking mode for reads
         if (!read_write) {
             int current_flags = ::fcntl(fd, F_GETFL, 0);
             ::fcntl(fd, F_SETFL, current_flags & ~O_NONBLOCK);
@@ -88,11 +78,10 @@ namespace ipc {
 
                 int ret = ::poll(&pfd, 1, timeout_ms);
                 if (ret == 0) {
-                    // Deadline expired: sender stalled or server failed to reply
                     return false;
                 }
                 if (ret < 0) {
-                    if (errno == EINTR) continue; // Interrupted by signal, retry poll
+                    if (errno == EINTR) continue;
                     return false;
                 }
             }
@@ -103,7 +92,7 @@ namespace ipc {
                 return false;
             }
             if (n == 0) {
-                return false; // EOF: writer disconnected
+                return false;
             }
             total += static_cast<size_t>(n);
         }
@@ -121,9 +110,6 @@ namespace ipc {
         }
     }
 
-    // ------------------------------------------------------------------------
-    // FifoWriter Implementation
-    // ------------------------------------------------------------------------
     FifoWriter::FifoWriter(int fd, std::string path)
         : fd_(fd), path_(std::move(path)) {}
 
@@ -154,19 +140,17 @@ namespace ipc {
         while (true) {
             int fd = ::open(path.c_str(), O_WRONLY | O_NONBLOCK);
             if (fd >= 0) {
-                // Reader is attached: switch back to standard blocking writes
                 int flags = ::fcntl(fd, F_GETFL, 0);
                 ::fcntl(fd, F_SETFL, flags & ~O_NONBLOCK);
                 return FifoWriter(fd, path);
             }
 
-            // ENXIO means no reader process is attached yet; retry until deadline
             if (errno != ENXIO && errno != ENOENT) {
                 return FifoWriter(-1, "");
             }
 
             if (std::chrono::steady_clock::now() - start >= timeout) {
-                return FifoWriter(-1, ""); // Handshake timeout expired
+                return FifoWriter(-1, "");
             }
 
             std::this_thread::sleep_for(std::chrono::milliseconds(20));
@@ -182,7 +166,7 @@ namespace ipc {
             ssize_t n = ::write(fd_, ptr + total, count - total);
             if (n < 0) {
                 if (errno == EINTR) continue;
-                return false; // Returns false on EPIPE
+                return false;
             }
             total += static_cast<size_t>(n);
         }
@@ -194,7 +178,7 @@ namespace ipc {
             ::close(fd_);
             fd_ = -1;
         }
-        path_.clear(); // Leaves the file on disk
+        path_.clear();
     }
 
-} // namespace ipc
+}
