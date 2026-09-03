@@ -5,12 +5,14 @@
 #include "subscriber_command.hpp"
 
 #include <iostream>
+#include <csignal>
 
 int main(int argc, char *argv[]) {
     if (!client::install_shutdown_handlers()) {
         std::cerr << "failed to install shutdown signal handlers" << '\n';
         return 1;
     }
+    std::signal(SIGPIPE, SIG_IGN);
 
     const client::ParseResult result = client::parse_command(argc, argv);
     if (!result.ok) {
